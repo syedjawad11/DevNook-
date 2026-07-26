@@ -27,6 +27,16 @@ export async function getStaticPaths() {
     const csCount = allCheatsheets.filter(
       cs => (cs.data as any).language === lang
     ).length;
+    // Sibling hubs, so each hub is reachable from every other one rather than
+    // only from the /languages/ index.
+    const siblings = Array.from(languageMap.entries())
+      .filter(([slug, p]) => slug !== lang && p.length > 0)
+      .map(([slug, p]) => ({
+        slug,
+        name: LANGUAGE_NAMES[slug] ?? slug,
+        postCount: p.length,
+      }))
+      .sort((a, b) => b.postCount - a.postCount || a.name.localeCompare(b.name));
     return {
       params: { lang },
       props: {
@@ -35,12 +45,13 @@ export async function getStaticPaths() {
         posts: sorted,
         cheatsheetCount: csCount,
         toolCount: allTools.length,
+        siblings,
       },
     };
   });
 }
 
-const { language, displayName, posts, cheatsheetCount, toolCount } = Astro.props;
+const { language, displayName, posts, cheatsheetCount, toolCount, siblings } = Astro.props;
 
 const breadcrumbs = [
   { label: 'Home', href: '/' },
@@ -129,6 +140,24 @@ const featuredTools = FEATURED_TOOL_SLUGS
             <a class="tool-pill" href={`/tools/${tool.data.tool_slug ?? tool.slug}/`}>
               <span class="tool-pill-name">{tool.data.title}</span>
               <span class="tool-pill-desc">{tool.data.description}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {siblings.length > 0 && (
+      <section class="section">
+        <div class="section-head">
+          <h2>Other languages</h2>
+          <a href="/languages/" class="section-link">All languages &rarr;</a>
+        </div>
+        <div class="sibling-row">
+          {siblings.map(s => (
+            <a class="sibling-pill" href={`/languages/${s.slug}/`}>
+              <span class="sibling-dot" style={`background:${langColor(s.slug)}`}></span>
+              <span class="sibling-name">{s.name}</span>
+              <span class="sibling-count">{s.postCount}</span>
             </a>
           ))}
         </div>
@@ -357,6 +386,48 @@ const featuredTools = FEATURED_TOOL_SLUGS
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .sibling-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .sibling-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+  }
+
+  .sibling-pill:hover {
+    border-color: var(--color-accent);
+    background: var(--color-accent-light);
+  }
+
+  .sibling-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sibling-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .sibling-count {
+    font-size: 12px;
+    color: var(--color-text-faint);
+    font-family: var(--font-mono);
   }
 
   .empty {

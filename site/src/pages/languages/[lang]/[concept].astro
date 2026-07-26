@@ -1,6 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import PostLayout from '../../../layouts/PostLayout.astro';
+import { LANGUAGE_NAMES } from '../../../lib/language-colors';
 
 export async function getStaticPaths() {
   const languagePosts = await getCollection('languages');
@@ -21,17 +22,10 @@ interface Props {
 const { entry } = Astro.props;
 const { Content } = await entry.render();
 
-const breadcrumbs = [
-  { label: 'Home', href: '/' },
-  { label: 'Languages', href: '/languages/' },
-  { 
-    label: entry.data.language.charAt(0).toUpperCase() + entry.data.language.slice(1), 
-    href: `/languages/${entry.data.language}` 
-  },
-  { label: entry.data.title, href: '' },
-];
-
-const languageDisplay = entry.data.language.charAt(0).toUpperCase() + entry.data.language.slice(1);
+// Breadcrumbs are built by PostLayout from the URL + frontmatter — don't
+// duplicate them here (an earlier local copy linked the no-slash hub URL,
+// which 301-redirects).
+const languageDisplay = LANGUAGE_NAMES[entry.data.language] ?? entry.data.language;
 ---
 
 <PostLayout frontmatter={entry.data}>

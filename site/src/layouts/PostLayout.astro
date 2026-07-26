@@ -5,6 +5,7 @@ import Breadcrumb from '../components/Breadcrumb.astro';
 import RelatedPosts from '../components/RelatedPosts.astro';
 import TagBadge from '../components/TagBadge.astro';
 import { AUTHOR, ORGANIZATION, SITE_URL } from '../lib/author';
+import { langName } from '../lib/language-colors';
 
 interface Props {
   frontmatter: {
@@ -117,17 +118,30 @@ const articleSchema = {
   url: pageUrl,
 };
 
+// Labels here are also the `name` values in the BreadcrumbList schema, so use
+// display names rather than raw URL segments ("C#", not "csharp").
+const SECTION_LABELS: Record<string, string> = {
+  languages: 'Languages',
+  guides: 'Guides',
+  blog: 'Blog',
+  cheatsheets: 'Cheat sheets',
+  tools: 'Tools',
+};
+
 const breadcrumbItems: { label: string; href: string | null }[] = [
   { label: 'Home', href: '/' },
 ];
 const pathParts = Astro.url.pathname.split('/').filter(Boolean);
 
 if (pathParts.length > 0) {
-  breadcrumbItems.push({ label: pathParts[0], href: `/${pathParts[0]}/` });
+  breadcrumbItems.push({
+    label: SECTION_LABELS[pathParts[0]] ?? pathParts[0],
+    href: `/${pathParts[0]}/`,
+  });
 }
 if (pathParts.length > 1 && frontmatter.language) {
   breadcrumbItems.push({
-    label: frontmatter.language,
+    label: langName(frontmatter.language),
     href: `/languages/${frontmatter.language}/`
   });
 }

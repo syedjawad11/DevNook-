@@ -6,11 +6,16 @@ import { LANGUAGE_NAMES } from '../../lib/language-colors';
 
 const allLanguagePosts = await getCollection('languages');
 
+// Every language that has at least one post gets a card. A higher gate here
+// silently orphans whole silos: the hub still builds and sits in the sitemap,
+// but nothing on the site links to it.
 const languages = Object.keys(LANGUAGE_NAMES).map(slug => ({
   slug,
   name: LANGUAGE_NAMES[slug],
   postCount: allLanguagePosts.filter(p => p.data.language === slug).length,
-})).filter(lang => lang.postCount >= 5);
+}))
+  .filter(lang => lang.postCount > 0)
+  .sort((a, b) => b.postCount - a.postCount || a.name.localeCompare(b.name));
 ---
 
 <BaseLayout

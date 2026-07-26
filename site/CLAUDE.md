@@ -78,7 +78,14 @@ Spawn with: `Agent(prompt=open('agents/subagent-prompts/builder.md').read(), ...
 | Auto-internal-links covers all categories | Scans full `contentDir` — guides, blog, cheatsheets, languages. Not language-only. |
 | Related callouts plugin (session 32) | Injects up to 3 `<aside class="related-callout">` nodes at interior H2s. Per-post opt-out: `excludeRelatedCallouts: true`. |
 | No H1 in markdown body | `PostLayout.astro` renders title as `<h1>`. Body `# Title` = duplicate H1, Ahrefs flags it. |
+| Author identity is single-sourced | `src/lib/author.ts` exports `AUTHOR` ("Syed J.") + `ORGANIZATION`. `PostLayout.astro` injects the "By Syed J." byline + Article/Person/Organization JSON-LD on every content page; bio at `/about/syed-j/`. Never hardcode an author name — pull from `author.ts`. No AI-process disclosure on bylines (user decision). |
+| Same-topic duplicates → 301, don't co-exist | Cannibalizing pages get merged: retire the weaker file, add a `/old/ /canonical/ 301` line to `public/_redirects`, repoint inbound links. |
 | Never use `[skip ci]` in devnook commits | Cloudflare Pages skips build. The `[skip ci]` in `drip-publish.yml` is intentional (content-workspace side only). |
+| `/languages/` index lists every language with ≥1 post | The old `postCount >= 5` gate orphaned 8 of 13 hubs: they still built and sat in the sitemap, but nothing linked to them. Never gate a hub card on volume — gate on "has content". |
+| Language hubs cross-link each other | `[lang]/index.astro` renders an "Other languages" row so the 13 hubs form a mesh, not 13 dead ends off one index page. |
+| `devnookUrlBuilder` branches on `category === 'languages'` | Cheatsheets may also carry `language` + `concept` (`javascript-array-cheatsheet` = javascript/array-methods, which is also a real language post). Without the category check they resolve onto the language article's URL. |
+| Sitemap emits per-page `<lastmod>` | `src/lib/sitemap-lastmod.mjs` reads `published_date` off disk and feeds `sitemap({ serialize })`. Never use the integration's top-level `lastmod` option — it stamps one identical date on all ~150 URLs, which Google discounts. Hubs inherit their newest child's date. |
+| Breadcrumb labels are display names | `Breadcrumb.astro` feeds its labels straight into BreadcrumbList schema, so `PostLayout` maps `csharp` → `C#` and `languages` → `Languages`. Never pass raw URL segments. |
 
 ---
 
